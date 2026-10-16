@@ -23,12 +23,23 @@ jobs:
         with:
           gradle-version: "9.2.0"
 
-      - name: Unzip source
+      - name: Unzip and fix settings
         run: |
           unzip -o "DimensityBoost-revised-source.zip" || unzip -o "DimensityBoost-revised-source" || unzip -o "*.zip"
           ROOT=$(find . -name build.gradle -not -path './.git/*' | head -1 | xargs dirname)
           echo "PROJECT_ROOT=$ROOT" >> $GITHUB_ENV
           echo "Using project root: $ROOT"
+          # 修复 Loom 与 FAIL_ON_PROJECT_REPOS 冲突
+          cat > "$ROOT/settings.gradle" << 'EOF'
+          pluginManagement {
+              repositories {
+                  maven { name = 'Fabric'; url = 'https://maven.fabricmc.net/' }
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
+          }
+          rootProject.name = 'dimensityboost'
+          EOF
           ls -la "$ROOT"
 
       - name: Build
